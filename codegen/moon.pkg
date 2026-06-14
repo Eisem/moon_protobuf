@@ -1,0 +1,3 @@
+import {
+  "Eisem/moon_protobuf/proto_parser",
+}

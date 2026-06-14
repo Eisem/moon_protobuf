@@ -1,0 +1,7 @@
+import {
+  "Eisem/moon_protobuf/wire",
+}
+
+options(
+  "is-main": true,
+)
