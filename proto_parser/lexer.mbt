@@ -56,6 +56,49 @@ pub(all) suberror ParseError {
 }
 
 ///|
+pub impl Show for TokenKind with output(self, logger) {
+  match self {
+    Syntax => logger.write_string("syntax")
+    Message => logger.write_string("message")
+    Enum => logger.write_string("enum")
+    Repeated => logger.write_string("repeated")
+    Optional => logger.write_string("optional")
+    Reserved => logger.write_string("reserved")
+    Package => logger.write_string("package")
+    Import => logger.write_string("import")
+    Oneof => logger.write_string("oneof")
+    Map => logger.write_string("map")
+    TDouble => logger.write_string("double")
+    TFloat => logger.write_string("float")
+    TInt32 => logger.write_string("int32")
+    TInt64 => logger.write_string("int64")
+    TUint32 => logger.write_string("uint32")
+    TUint64 => logger.write_string("uint64")
+    TSint32 => logger.write_string("sint32")
+    TSint64 => logger.write_string("sint64")
+    TFixed32 => logger.write_string("fixed32")
+    TFixed64 => logger.write_string("fixed64")
+    TSfixed32 => logger.write_string("sfixed32")
+    TSfixed64 => logger.write_string("sfixed64")
+    TBool => logger.write_string("bool")
+    TString => logger.write_string("string")
+    TBytes => logger.write_string("bytes")
+    Ident(s) => logger.write_string("ident(\{s})")
+    IntLit(n) => logger.write_string("int(\{n})")
+    StringLit(s) => logger.write_string("string(\{s})")
+    LBrace => logger.write_string("{")
+    RBrace => logger.write_string("}")
+    LBracket => logger.write_string("[")
+    RBracket => logger.write_string("]")
+    Semicolon => logger.write_string(";")
+    Equals => logger.write_string("=")
+    Comma => logger.write_string(",")
+    Dot => logger.write_string(".")
+    Eof => logger.write_string("EOF")
+  }
+}
+
+///|
 struct Lexer {
   input : String
   mut pos : Int
