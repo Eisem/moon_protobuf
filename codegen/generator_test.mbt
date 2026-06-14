@@ -86,6 +86,35 @@ test "generate repeated field" {
 }
 
 ///|
+test "generate map field" {
+  let file : @proto_parser.ProtoFile = {
+    syntax: "proto3",
+    package_name: "",
+    messages: [
+      {
+        name: "Config",
+        fields: [
+          {
+            name: "metadata",
+            field_type: MapType(key_type=String_, value_type=Scalar(String_)),
+            label: Optional,
+            number: 1,
+          },
+        ],
+        nested_messages: [],
+        nested_enums: [],
+      },
+    ],
+    enums: [],
+  }
+  let output = @codegen.generate(file)
+  assert_true(output.contains("metadata : Map[String, String]"))
+  assert_true(output.contains("for k, v in self.metadata"))
+  assert_true(output.contains("write_message"))
+  assert_true(output.contains("_entry_dec"))
+}
+
+///|
 test "generate message field" {
   let file : @proto_parser.ProtoFile = {
     syntax: "proto3",

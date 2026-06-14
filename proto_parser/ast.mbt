@@ -22,6 +22,7 @@ pub(all) enum FieldType {
   Scalar(ScalarType)
   Message(String)
   Enum(String)
+  MapType(key_type~ : ScalarType, value_type~ : FieldType)
 } derive(Debug, Eq)
 
 ///|

@@ -111,6 +111,26 @@ test "parse all scalar types" {
 }
 
 ///|
+test "parse map field" {
+  let input =
+    #|syntax = "proto3";
+    #|message Config {
+    #|  map<string, string> metadata = 1;
+    #|  map<int32, string> labels = 2;
+    #|}
+  let file = @proto_parser.parse(input)
+  assert_eq(file.messages[0].name, "Config")
+  assert_eq(file.messages[0].fields.length(), 2)
+  assert_eq(file.messages[0].fields[0].name, "metadata")
+  assert_true(
+    file.messages[0].fields[0].field_type == MapType(key_type=String_, value_type=Scalar(String_)),
+  )
+  assert_true(
+    file.messages[0].fields[1].field_type == MapType(key_type=Int32, value_type=Scalar(String_)),
+  )
+}
+
+///|
 test "parse complex proto" {
   let input =
     #|syntax = "proto3";

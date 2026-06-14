@@ -36,6 +36,8 @@ pub(all) enum TokenKind {
   Equals
   Comma
   Dot
+  LAngle
+  RAngle
   Eof
 } derive(Debug, Eq)
 
@@ -94,6 +96,8 @@ pub impl Show for TokenKind with fn output(self, logger) {
     Equals => logger.write_string("=")
     Comma => logger.write_string(",")
     Dot => logger.write_string(".")
+    LAngle => logger.write_string("<")
+    RAngle => logger.write_string(">")
     Eof => logger.write_string("EOF")
   }
 }
@@ -345,6 +349,12 @@ pub fn Lexer::tokenize(self : Lexer) -> Array[Token] raise ParseError {
     } else if c == '.' {
       let _ = self.advance()
       tokens.push({ kind: Dot, line: start_line, col: start_col })
+    } else if c == '<' {
+      let _ = self.advance()
+      tokens.push({ kind: LAngle, line: start_line, col: start_col })
+    } else if c == '>' {
+      let _ = self.advance()
+      tokens.push({ kind: RAngle, line: start_line, col: start_col })
     } else {
       let _ = self.advance()
       raise ParseError::UnexpectedChar(char=c, line=start_line, col=start_col)

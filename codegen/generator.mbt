@@ -122,6 +122,7 @@ fn generate_encode(msg : @proto_parser.MessageDef) -> String {
             sb.write_string("    encoder.write_int32(\{num}, v.to_int())\n")
             sb.write_string("  }\n")
           }
+          MapType(..) => ()
         }
       _ =>
         match field.field_type {
@@ -151,6 +152,20 @@ fn generate_encode(msg : @proto_parser.MessageDef) -> String {
             sb.write_string(
               "    encoder.write_int32(\{num}, self.\{field.name}.to_int())\n",
             )
+            sb.write_string("  }\n")
+          }
+          MapType(key_type~, value_type~) => {
+            let key_write = scalar_write_method(key_type)
+            let val_write = match value_type {
+              Scalar(t) => scalar_write_method(t)
+              Message(_) => "write_bytes"
+              _ => "write_string"
+            }
+            sb.write_string("  for k, v in self.\{field.name} {\n")
+            sb.write_string("    encoder.write_message(\{num}, (_enc) => {\n")
+            sb.write_string("      _enc.\{key_write}(1, k)\n")
+            sb.write_string("      _enc.\{val_write}(2, v)\n")
+            sb.write_string("    })\n")
             sb.write_string("  }\n")
           }
         }
@@ -203,6 +218,7 @@ fn generate_decode(msg : @proto_parser.MessageDef) -> String {
             sb.write_string(
               "      \{num} => _f\{num}.push(decoder.read_int32())\n",
             )
+          MapType(..) => ()
         }
       _ =>
         match field.field_type {
@@ -222,6 +238,30 @@ fn generate_decode(msg : @proto_parser.MessageDef) -> String {
           }
           Enum(_) =>
             sb.write_string("      \{num} => _f\{num} = decoder.read_int32()\n")
+          MapType(key_type~, value_type~) => {
+            let key_read = scalar_read_method(key_type)
+            let val_read = match value_type {
+              Scalar(t) => scalar_read_method(t)
+              Message(_) => "read_bytes"
+              _ => "read_string"
+            }
+            sb.write_string("      \{num} => {\n")
+            sb.write_string("        decoder.read_message((_entry_dec) => {\n")
+            sb.write_string("          let mut _k = \{scalar_default_value(key_type)}\n")
+            let val_default = match value_type { Scalar(t) => scalar_default_value(t); _ => "\"\"" }
+            sb.write_string("          let mut _v = \{val_default}\n")
+            sb.write_string("          while !(_entry_dec.is_at_end()) {\n")
+            sb.write_string("            let etag = _entry_dec.read_tag()\n")
+            sb.write_string("            match etag.field_number {\n")
+            sb.write_string("              1 => _k = _entry_dec.\{key_read}()\n")
+            sb.write_string("              2 => _v = _entry_dec.\{val_read}()\n")
+            sb.write_string("              _ => _entry_dec.skip_field(etag.wire_type)\n")
+            sb.write_string("            }\n")
+            sb.write_string("          }\n")
+            sb.write_string("          _f\{num}[_k] = _v\n")
+            sb.write_string("        })\n")
+            sb.write_string("      }\n")
+          }
         }
     }
   }
@@ -238,30 +278,50 @@ fn generate_decode(msg : @proto_parser.MessageDef) -> String {
 
 ///|
 fn field_to_moonbit_type(field : @proto_parser.FieldDef) -> String {
-  let base = match field.field_type {
-    Scalar(t) => scalar_to_moonbit_type(t)
-    Message(name) => name
-    Enum(name) => name
-  }
-  match field.label {
-    Repeated => "Array[\{base}]"
-    _ =>
-      match field.field_type {
-        Message(_) => "\{base}?"
-        _ => base
+  match field.field_type {
+    MapType(key_type~, value_type~) => {
+      let key_t = scalar_to_moonbit_type(key_type)
+      let val_t = match value_type {
+        Scalar(t) => scalar_to_moonbit_type(t)
+        Message(name) => name
+        Enum(name) => name
+        MapType(..) => "Map[String, String]"
       }
+      "Map[\{key_t}, \{val_t}]"
+    }
+    _ => {
+      let base = match field.field_type {
+        Scalar(t) => scalar_to_moonbit_type(t)
+        Message(name) => name
+        Enum(name) => name
+        MapType(..) => ""
+      }
+      match field.label {
+        Repeated => "Array[\{base}]"
+        _ =>
+          match field.field_type {
+            Message(_) => "\{base}?"
+            _ => base
+          }
+      }
+    }
   }
 }
 
 ///|
 fn field_default_value(field : @proto_parser.FieldDef) -> String {
-  match field.label {
-    Repeated => "[]"
+  match field.field_type {
+    MapType(..) => "Map::from_array([])"
     _ =>
-      match field.field_type {
-        Scalar(t) => scalar_default_value(t)
-        Message(_) => "None"
-        Enum(_) => "0"
+      match field.label {
+        Repeated => "[]"
+        _ =>
+          match field.field_type {
+            Scalar(t) => scalar_default_value(t)
+            Message(_) => "None"
+            Enum(_) => "0"
+            MapType(..) => "Map::from_array([])"
+          }
       }
   }
 }
