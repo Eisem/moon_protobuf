@@ -52,4 +52,6 @@ pub(all) suberror WireError {
   UnexpectedEndOfInput
   VarIntOverflow
   InvalidUtf8
+  InvalidFieldNumber(Int)
+  TruncatedMessage
 }
