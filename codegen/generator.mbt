@@ -15,6 +15,10 @@ pub fn generate(file : @proto_parser.ProtoFile) -> String {
 ///|
 pub fn generate_message(msg : @proto_parser.MessageDef) -> String {
   let sb = StringBuilder::new()
+  for oneof in msg.oneofs {
+    sb.write_string(generate_oneof_enum(msg.name, oneof))
+    sb.write_string("\n")
+  }
   sb.write_string(generate_struct(msg))
   sb.write_string("\n")
   sb.write_string(generate_new(msg))
@@ -30,6 +34,43 @@ pub fn generate_message(msg : @proto_parser.MessageDef) -> String {
     sb.write_string(generate_enum(nested_enum))
   }
   sb.to_string()
+}
+
+///|
+fn generate_oneof_enum(msg_name : String, oneof : @proto_parser.OneofDef) -> String {
+  let sb = StringBuilder::new()
+  let enum_name = "\{msg_name}_\{capitalize(oneof.name)}"
+  sb.write_string("///|\npub(all) enum \{enum_name} {\n")
+  sb.write_string("  NotSet\n")
+  for field in oneof.fields {
+    let type_str = match field.field_type {
+      Scalar(t) => scalar_to_moonbit_type(t)
+      Message(name) => name
+      Enum(name) => name
+      MapType(..) => "String"
+    }
+    sb.write_string("  \{capitalize(field.name)}(\{type_str})\n")
+  }
+  sb.write_string("} derive(Debug, Eq)\n")
+  sb.to_string()
+}
+
+///|
+fn capitalize(s : String) -> String {
+  if s.length() == 0 {
+    return s
+  }
+  let first = match s.get_char(0) {
+    Some(c) =>
+      if c >= 'a' && c <= 'z' {
+        Int::unsafe_to_char(c.to_int() - 32)
+      } else {
+        c
+      }
+    None => return s
+  }
+  let rest = s[1:].to_owned()
+  "\{first}\{rest}"
 }
 
 ///|
@@ -66,6 +107,10 @@ fn generate_struct(msg : @proto_parser.MessageDef) -> String {
     let mbt_type = field_to_moonbit_type(field)
     sb.write_string("  \{field.name} : \{mbt_type}\n")
   }
+  for oneof in msg.oneofs {
+    let enum_name = "\{msg.name}_\{capitalize(oneof.name)}"
+    sb.write_string("  \{oneof.name} : \{enum_name}\n")
+  }
   sb.write_string("} derive(Debug, Eq)\n")
   sb.to_string()
 }
@@ -78,6 +123,9 @@ fn generate_new(msg : @proto_parser.MessageDef) -> String {
   for field in msg.fields {
     let default_val = field_default_value(field)
     sb.write_string("    \{field.name}: \{default_val},\n")
+  }
+  for oneof in msg.oneofs {
+    sb.write_string("    \{oneof.name}: NotSet,\n")
   }
   sb.write_string("  }\n}\n")
   sb.to_string()
@@ -171,6 +219,21 @@ fn generate_encode(msg : @proto_parser.MessageDef) -> String {
         }
     }
   }
+  for oneof in msg.oneofs {
+    let enum_name = "\{msg.name}_\{capitalize(oneof.name)}"
+    sb.write_string("  match self.\{oneof.name} {\n")
+    sb.write_string("    \{enum_name}::NotSet => ()\n")
+    for ofield in oneof.fields {
+      let variant = capitalize(ofield.name)
+      let write_method = match ofield.field_type {
+        Scalar(t) => scalar_write_method(t)
+        Message(_) => "write_bytes"
+        _ => "write_string"
+      }
+      sb.write_string("    \{enum_name}::\{variant}(v) => encoder.\{write_method}(\{ofield.number}, v)\n")
+    }
+    sb.write_string("  }\n")
+  }
   sb.write_string("  encoder.finish()\n}\n")
   sb.to_string()
 }
@@ -185,6 +248,10 @@ fn generate_decode(msg : @proto_parser.MessageDef) -> String {
   for field in msg.fields {
     let default_val = field_default_value(field)
     sb.write_string("  let mut _f\{field.number} = \{default_val}\n")
+  }
+  for oneof in msg.oneofs {
+    let enum_name = "\{msg.name}_\{capitalize(oneof.name)}"
+    sb.write_string("  let mut _oneof_\{oneof.name} : \{enum_name} = NotSet\n")
   }
   sb.write_string("  while !(decoder.is_at_end()) {\n")
   sb.write_string("    let tag = decoder.read_tag()\n")
@@ -265,12 +332,27 @@ fn generate_decode(msg : @proto_parser.MessageDef) -> String {
         }
     }
   }
+  for oneof in msg.oneofs {
+    let enum_name = "\{msg.name}_\{capitalize(oneof.name)}"
+    for ofield in oneof.fields {
+      let variant = capitalize(ofield.name)
+      let read_method = match ofield.field_type {
+        Scalar(t) => scalar_read_method(t)
+        Message(_) => "read_bytes"
+        _ => "read_string"
+      }
+      sb.write_string("      \{ofield.number} => _oneof_\{oneof.name} = \{enum_name}::\{variant}(decoder.\{read_method}())\n")
+    }
+  }
   sb.write_string("      _ => decoder.skip_field(tag.wire_type)\n")
   sb.write_string("    }\n")
   sb.write_string("  }\n")
   sb.write_string("  {\n")
   for field in msg.fields {
     sb.write_string("    \{field.name}: _f\{field.number},\n")
+  }
+  for oneof in msg.oneofs {
+    sb.write_string("    \{oneof.name}: _oneof_\{oneof.name},\n")
   }
   sb.write_string("  }\n}\n")
   sb.to_string()

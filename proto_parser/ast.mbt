@@ -53,9 +53,23 @@ pub(all) struct EnumDef {
 } derive(Debug, Eq)
 
 ///|
+pub(all) struct OneofFieldDef {
+  name : String
+  field_type : FieldType
+  number : Int
+} derive(Debug, Eq)
+
+///|
+pub(all) struct OneofDef {
+  name : String
+  fields : Array[OneofFieldDef]
+} derive(Debug, Eq)
+
+///|
 pub(all) struct MessageDef {
   name : String
   fields : Array[FieldDef]
+  oneofs : Array[OneofDef]
   nested_messages : Array[MessageDef]
   nested_enums : Array[EnumDef]
 } derive(Debug, Eq)

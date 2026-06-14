@@ -131,6 +131,29 @@ test "parse map field" {
 }
 
 ///|
+test "parse oneof" {
+  let input =
+    #|syntax = "proto3";
+    #|message Shape {
+    #|  string name = 1;
+    #|  oneof kind {
+    #|    int32 circle_radius = 2;
+    #|    string rect_size = 3;
+    #|    double triangle_area = 4;
+    #|  }
+    #|}
+  let file = @proto_parser.parse(input)
+  assert_eq(file.messages[0].name, "Shape")
+  assert_eq(file.messages[0].fields.length(), 1)
+  assert_eq(file.messages[0].oneofs.length(), 1)
+  assert_eq(file.messages[0].oneofs[0].name, "kind")
+  assert_eq(file.messages[0].oneofs[0].fields.length(), 3)
+  assert_eq(file.messages[0].oneofs[0].fields[0].name, "circle_radius")
+  assert_true(file.messages[0].oneofs[0].fields[0].field_type == Scalar(Int32))
+  assert_eq(file.messages[0].oneofs[0].fields[0].number, 2)
+}
+
+///|
 test "parse complex proto" {
   let input =
     #|syntax = "proto3";

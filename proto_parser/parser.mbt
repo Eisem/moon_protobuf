@@ -158,12 +158,14 @@ fn Parser::parse_message(self : Parser) -> MessageDef raise ParseError {
   let name = self.expect_ident()
   let _ = self.expect(LBrace)
   let fields : Array[FieldDef] = []
+  let oneofs : Array[OneofDef] = []
   let nested_messages : Array[MessageDef] = []
   let nested_enums : Array[EnumDef] = []
   while self.current().kind != RBrace && self.current().kind != Eof {
     match self.current().kind {
       Message => nested_messages.push(self.parse_message())
       Enum => nested_enums.push(self.parse_enum())
+      Oneof => oneofs.push(self.parse_oneof())
       Reserved => {
         self.pos = self.pos + 1
         while self.current().kind != Semicolon && self.current().kind != Eof {
@@ -175,7 +177,25 @@ fn Parser::parse_message(self : Parser) -> MessageDef raise ParseError {
     }
   }
   let _ = self.expect(RBrace)
-  { name, fields, nested_messages, nested_enums }
+  { name, fields, oneofs, nested_messages, nested_enums }
+}
+
+///|
+fn Parser::parse_oneof(self : Parser) -> OneofDef raise ParseError {
+  let _ = self.expect(Oneof)
+  let name = self.expect_ident()
+  let _ = self.expect(LBrace)
+  let fields : Array[OneofFieldDef] = []
+  while self.current().kind != RBrace && self.current().kind != Eof {
+    let field_type = self.parse_field_type()
+    let field_name = self.expect_ident()
+    let _ = self.expect(Equals)
+    let number = self.expect_int()
+    self.expect_semicolon()
+    fields.push({ name: field_name, field_type, number })
+  }
+  let _ = self.expect(RBrace)
+  { name, fields }
 }
 
 ///|

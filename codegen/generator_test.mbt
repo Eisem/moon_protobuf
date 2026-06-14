@@ -15,6 +15,7 @@ test "generate simple message" {
           },
           { name: "age", field_type: Scalar(Int32), label: Optional, number: 2 },
         ],
+        oneofs: [],
         nested_messages: [],
         nested_enums: [],
       },
@@ -73,6 +74,7 @@ test "generate repeated field" {
             number: 2,
           },
         ],
+        oneofs: [],
         nested_messages: [],
         nested_enums: [],
       },
@@ -101,6 +103,7 @@ test "generate map field" {
             number: 1,
           },
         ],
+        oneofs: [],
         nested_messages: [],
         nested_enums: [],
       },
@@ -112,6 +115,40 @@ test "generate map field" {
   assert_true(output.contains("for k, v in self.metadata"))
   assert_true(output.contains("write_message"))
   assert_true(output.contains("_entry_dec"))
+}
+
+///|
+test "generate oneof" {
+  let file : @proto_parser.ProtoFile = {
+    syntax: "proto3",
+    package_name: "",
+    messages: [
+      {
+        name: "Shape",
+        fields: [
+          { name: "name", field_type: Scalar(String_), label: Optional, number: 1 },
+        ],
+        oneofs: [
+          {
+            name: "kind",
+            fields: [
+              { name: "circle_radius", field_type: Scalar(Int32), number: 2 },
+              { name: "rect_width", field_type: Scalar(Double), number: 3 },
+            ],
+          },
+        ],
+        nested_messages: [],
+        nested_enums: [],
+      },
+    ],
+    enums: [],
+  }
+  let output = @codegen.generate(file)
+  assert_true(output.contains("pub(all) enum Shape_Kind"))
+  assert_true(output.contains("NotSet"))
+  assert_true(output.contains("Circle_radius(Int)"))
+  assert_true(output.contains("Rect_width(Double)"))
+  assert_true(output.contains("kind : Shape_Kind"))
 }
 
 ///|
@@ -130,6 +167,7 @@ test "generate message field" {
             number: 1,
           },
         ],
+        oneofs: [],
         nested_messages: [],
         nested_enums: [],
       },
