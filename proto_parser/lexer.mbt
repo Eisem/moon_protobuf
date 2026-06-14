@@ -56,7 +56,7 @@ pub(all) suberror ParseError {
 }
 
 ///|
-pub impl Show for TokenKind with output(self, logger) {
+pub impl Show for TokenKind with fn output(self, logger) {
   match self {
     Syntax => logger.write_string("syntax")
     Message => logger.write_string("message")
@@ -99,7 +99,7 @@ pub impl Show for TokenKind with output(self, logger) {
 }
 
 ///|
-pub impl Show for ParseError with output(self, logger) {
+pub impl Show for ParseError with fn output(self, logger) {
   match self {
     UnexpectedChar(char~, line~, col~) =>
       logger.write_string("unexpected char '\{char}' at \{line}:\{col}")
@@ -215,7 +215,10 @@ fn Lexer::read_number(self : Lexer) -> Int {
 }
 
 ///|
-fn Lexer::read_string_lit(self : Lexer, quote : Char) -> String raise ParseError {
+fn Lexer::read_string_lit(
+  self : Lexer,
+  quote : Char,
+) -> String raise ParseError {
   let buf = StringBuilder::new()
   while self.pos < self.input.length() {
     let c = self.advance()
@@ -297,12 +300,20 @@ pub fn Lexer::tokenize(self : Lexer) -> Array[Token] raise ParseError {
         self.skip_block_comment()
         continue
       } else {
-        raise ParseError::UnexpectedChar(char='/', line=start_line, col=start_col)
+        raise ParseError::UnexpectedChar(
+          char='/',
+          line=start_line,
+          col=start_col,
+        )
       }
     }
     if (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_' {
       let word = self.read_ident()
-      tokens.push({ kind: keyword_or_ident(word), line: start_line, col: start_col })
+      tokens.push({
+        kind: keyword_or_ident(word),
+        line: start_line,
+        col: start_col,
+      })
     } else if c >= '0' && c <= '9' {
       let num = self.read_number()
       tokens.push({ kind: IntLit(num), line: start_line, col: start_col })

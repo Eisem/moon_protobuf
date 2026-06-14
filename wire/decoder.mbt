@@ -65,7 +65,10 @@ fn Decoder::read_raw_little_endian64(self : Decoder) -> UInt64 raise WireError {
 }
 
 ///|
-fn Decoder::read_raw_bytes_arr(self : Decoder, count : Int) -> Array[Byte] raise WireError {
+fn Decoder::read_raw_bytes_arr(
+  self : Decoder,
+  count : Int,
+) -> Array[Byte] raise WireError {
   if self.pos + count > self.data.length() {
     raise WireError::UnexpectedEndOfInput
   }
@@ -169,9 +172,7 @@ pub fn Decoder::read_string(self : Decoder) -> String raise WireError {
   }
   self.pos = self.pos + len
   let bytes_data = Bytes::from_array(byte_arr[:])
-  try {
-    @utf8.decode(bytes_data[:])
-  } catch {
+  @utf8.decode(bytes_data[:]) catch {
     _ => raise WireError::InvalidUtf8
   }
 }
@@ -183,7 +184,10 @@ pub fn Decoder::read_bytes(self : Decoder) -> Array[Byte] raise WireError {
 }
 
 ///|
-pub fn Decoder::read_message(self : Decoder, decode_fn : (Decoder) -> Unit raise WireError) -> Unit raise WireError {
+pub fn Decoder::read_message(
+  self : Decoder,
+  decode_fn : (Decoder) -> Unit raise WireError,
+) -> Unit raise WireError {
   let len = self.read_raw_varint().to_uint().reinterpret_as_int()
   if self.pos + len > self.data.length() {
     raise WireError::TruncatedMessage
@@ -213,7 +217,9 @@ pub fn Decoder::read_packed_int32(self : Decoder) -> Array[Int] raise WireError 
 }
 
 ///|
-pub fn Decoder::read_packed_uint64(self : Decoder) -> Array[UInt64] raise WireError {
+pub fn Decoder::read_packed_uint64(
+  self : Decoder,
+) -> Array[UInt64] raise WireError {
   let len = self.read_raw_varint().to_uint().reinterpret_as_int()
   let end_pos = self.pos + len
   if end_pos > self.data.length() {
@@ -228,9 +234,14 @@ pub fn Decoder::read_packed_uint64(self : Decoder) -> Array[UInt64] raise WireEr
 }
 
 ///|
-pub fn Decoder::skip_field(self : Decoder, wire_type : WireType) -> Unit raise WireError {
+pub fn Decoder::skip_field(
+  self : Decoder,
+  wire_type : WireType,
+) -> Unit raise WireError {
   match wire_type {
-    Varint => { let _ = self.read_raw_varint() }
+    Varint => {
+      let _ = self.read_raw_varint()
+    }
     Fixed64 => {
       if self.pos + 8 > self.data.length() {
         raise WireError::UnexpectedEndOfInput

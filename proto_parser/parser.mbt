@@ -29,7 +29,10 @@ fn Parser::advance_token(self : Parser) -> Token {
 }
 
 ///|
-fn Parser::expect(self : Parser, expected : TokenKind) -> Token raise ParseError {
+fn Parser::expect(
+  self : Parser,
+  expected : TokenKind,
+) -> Token raise ParseError {
   let tok = self.current()
   if tok.kind == expected {
     self.pos = self.pos + 1
@@ -129,12 +132,8 @@ fn Parser::parse_file(self : Parser) -> ProtoFile raise ParseError {
         package_name = buf.to_string()
         self.expect_semicolon()
       }
-      Message => {
-        messages.push(self.parse_message())
-      }
-      Enum => {
-        enums.push(self.parse_enum())
-      }
+      Message => messages.push(self.parse_message())
+      Enum => enums.push(self.parse_enum())
       Import => {
         self.pos = self.pos + 1
         let _ = self.expect_string_lit()
@@ -205,22 +204,70 @@ fn Parser::parse_field(self : Parser) -> FieldDef raise ParseError {
 fn Parser::parse_field_type(self : Parser) -> FieldType raise ParseError {
   let tok = self.current()
   match tok.kind {
-    TDouble => { self.pos = self.pos + 1; Scalar(Double) }
-    TFloat => { self.pos = self.pos + 1; Scalar(Float) }
-    TInt32 => { self.pos = self.pos + 1; Scalar(Int32) }
-    TInt64 => { self.pos = self.pos + 1; Scalar(Int64) }
-    TUint32 => { self.pos = self.pos + 1; Scalar(UInt32) }
-    TUint64 => { self.pos = self.pos + 1; Scalar(UInt64) }
-    TSint32 => { self.pos = self.pos + 1; Scalar(SInt32) }
-    TSint64 => { self.pos = self.pos + 1; Scalar(SInt64) }
-    TFixed32 => { self.pos = self.pos + 1; Scalar(Fixed32) }
-    TFixed64 => { self.pos = self.pos + 1; Scalar(Fixed64) }
-    TSfixed32 => { self.pos = self.pos + 1; Scalar(SFixed32) }
-    TSfixed64 => { self.pos = self.pos + 1; Scalar(SFixed64) }
-    TBool => { self.pos = self.pos + 1; Scalar(Bool) }
-    TString => { self.pos = self.pos + 1; Scalar(String_) }
-    TBytes => { self.pos = self.pos + 1; Scalar(Bytes) }
-    Ident(name) => { self.pos = self.pos + 1; Message(name) }
+    TDouble => {
+      self.pos = self.pos + 1
+      Scalar(Double)
+    }
+    TFloat => {
+      self.pos = self.pos + 1
+      Scalar(Float)
+    }
+    TInt32 => {
+      self.pos = self.pos + 1
+      Scalar(Int32)
+    }
+    TInt64 => {
+      self.pos = self.pos + 1
+      Scalar(Int64)
+    }
+    TUint32 => {
+      self.pos = self.pos + 1
+      Scalar(UInt32)
+    }
+    TUint64 => {
+      self.pos = self.pos + 1
+      Scalar(UInt64)
+    }
+    TSint32 => {
+      self.pos = self.pos + 1
+      Scalar(SInt32)
+    }
+    TSint64 => {
+      self.pos = self.pos + 1
+      Scalar(SInt64)
+    }
+    TFixed32 => {
+      self.pos = self.pos + 1
+      Scalar(Fixed32)
+    }
+    TFixed64 => {
+      self.pos = self.pos + 1
+      Scalar(Fixed64)
+    }
+    TSfixed32 => {
+      self.pos = self.pos + 1
+      Scalar(SFixed32)
+    }
+    TSfixed64 => {
+      self.pos = self.pos + 1
+      Scalar(SFixed64)
+    }
+    TBool => {
+      self.pos = self.pos + 1
+      Scalar(Bool)
+    }
+    TString => {
+      self.pos = self.pos + 1
+      Scalar(String_)
+    }
+    TBytes => {
+      self.pos = self.pos + 1
+      Scalar(Bytes)
+    }
+    Ident(name) => {
+      self.pos = self.pos + 1
+      Message(name)
+    }
     _ =>
       raise ParseError::UnexpectedToken(
         expected="type",

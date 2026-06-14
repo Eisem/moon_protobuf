@@ -7,7 +7,12 @@ test "generate simple message" {
       {
         name: "Person",
         fields: [
-          { name: "name", field_type: Scalar(String_), label: Optional, number: 1 },
+          {
+            name: "name",
+            field_type: Scalar(String_),
+            label: Optional,
+            number: 1,
+          },
           { name: "age", field_type: Scalar(Int32), label: Optional, number: 2 },
         ],
         nested_messages: [],
@@ -34,10 +39,7 @@ test "generate enum" {
     enums: [
       {
         name: "Status",
-        values: [
-          { name: "UNKNOWN", number: 0 },
-          { name: "ACTIVE", number: 1 },
-        ],
+        values: [{ name: "UNKNOWN", number: 0 }, { name: "ACTIVE", number: 1 }],
       },
     ],
   }
@@ -58,8 +60,18 @@ test "generate repeated field" {
       {
         name: "List",
         fields: [
-          { name: "values", field_type: Scalar(Int32), label: Repeated, number: 1 },
-          { name: "names", field_type: Scalar(String_), label: Repeated, number: 2 },
+          {
+            name: "values",
+            field_type: Scalar(Int32),
+            label: Repeated,
+            number: 1,
+          },
+          {
+            name: "names",
+            field_type: Scalar(String_),
+            label: Repeated,
+            number: 2,
+          },
         ],
         nested_messages: [],
         nested_enums: [],
@@ -82,7 +94,12 @@ test "generate message field" {
       {
         name: "Wrapper",
         fields: [
-          { name: "inner", field_type: Message("Inner"), label: Optional, number: 1 },
+          {
+            name: "inner",
+            field_type: Message("Inner"),
+            label: Optional,
+            number: 1,
+          },
         ],
         nested_messages: [],
         nested_enums: [],

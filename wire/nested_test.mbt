@@ -1,9 +1,9 @@
 ///|
 test "deeply nested messages" {
   let enc = @wire.Encoder::new()
-  enc.write_message(1, (outer) => {
+  enc.write_message(1, outer => {
     outer.write_string(1, "outer")
-    outer.write_message(2, (inner) => {
+    outer.write_message(2, inner => {
       inner.write_int32(1, 99)
       inner.write_string(2, "inner")
     })
@@ -13,14 +13,14 @@ test "deeply nested messages" {
   let mut outer_name = ""
   let mut inner_val = 0
   let mut inner_name = ""
-  dec.read_message((outer_dec) => {
-    while !(outer_dec.is_at_end()) {
+  dec.read_message(outer_dec => {
+    while !outer_dec.is_at_end() {
       let tag = outer_dec.read_tag()
       match tag.field_number {
         1 => outer_name = outer_dec.read_string()
         2 =>
-          outer_dec.read_message((inner_dec) => {
-            while !(inner_dec.is_at_end()) {
+          outer_dec.read_message(inner_dec => {
+            while !inner_dec.is_at_end() {
               let itag = inner_dec.read_tag()
               match itag.field_number {
                 1 => inner_val = inner_dec.read_int32()
@@ -46,7 +46,7 @@ test "repeated strings (non-packed)" {
   enc.write_string(3, "tag3")
   let dec = @wire.Decoder::new(enc.finish())
   let tags : Array[String] = []
-  while !(dec.is_at_end()) {
+  while !dec.is_at_end() {
     let tag = dec.read_tag()
     assert_true(tag.field_number == 3)
     tags.push(dec.read_string())
@@ -98,7 +98,7 @@ test "mixed fields with skip" {
   let mut field1 = 0
   let mut field2 = ""
   let mut field3 = false
-  while !(dec.is_at_end()) {
+  while !dec.is_at_end() {
     let tag = dec.read_tag()
     match tag.field_number {
       1 => field1 = dec.read_int32()
@@ -115,10 +115,10 @@ test "mixed fields with skip" {
 ///|
 test "empty message" {
   let enc = @wire.Encoder::new()
-  enc.write_message(1, (_sub) => ())
+  enc.write_message(1, _sub => ())
   let dec = @wire.Decoder::new(enc.finish())
   let _ = dec.read_tag()
-  dec.read_message((_sub_dec) => ())
+  dec.read_message(_sub_dec => ())
   assert_true(dec.is_at_end())
 }
 
@@ -129,7 +129,7 @@ test "person-like message roundtrip" {
   enc.write_int32(2, 30)
   enc.write_string(3, "developer")
   enc.write_string(3, "moonbit")
-  enc.write_message(4, (addr) => {
+  enc.write_message(4, addr => {
     addr.write_string(1, "123 Main St")
     addr.write_string(2, "Shenzhen")
     addr.write_int32(3, 518000)
@@ -142,15 +142,15 @@ test "person-like message roundtrip" {
   let mut street = ""
   let mut city = ""
   let mut zip = 0
-  while !(dec.is_at_end()) {
+  while !dec.is_at_end() {
     let tag = dec.read_tag()
     match tag.field_number {
       1 => name = dec.read_string()
       2 => age = dec.read_int32()
       3 => tags.push(dec.read_string())
       4 =>
-        dec.read_message((addr_dec) => {
-          while !(addr_dec.is_at_end()) {
+        dec.read_message(addr_dec => {
+          while !addr_dec.is_at_end() {
             let atag = addr_dec.read_tag()
             match atag.field_number {
               1 => street = addr_dec.read_string()

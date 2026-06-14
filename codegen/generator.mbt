@@ -46,7 +46,9 @@ pub fn generate_enum(e : @proto_parser.EnumDef) -> String {
     sb.write_string("    \{v.name} => \{v.number}\n")
   }
   sb.write_string("  }\n}\n\n")
-  sb.write_string("///|\npub fn \{e.name}::from_int(value : Int) -> \{e.name} {\n")
+  sb.write_string(
+    "///|\npub fn \{e.name}::from_int(value : Int) -> \{e.name} {\n",
+  )
   sb.write_string("  match value {\n")
   for v in e.values {
     sb.write_string("    \{v.number} => \{v.name}\n")
@@ -84,18 +86,22 @@ fn generate_new(msg : @proto_parser.MessageDef) -> String {
 ///|
 fn generate_encode(msg : @proto_parser.MessageDef) -> String {
   let sb = StringBuilder::new()
-  sb.write_string("///|\npub fn \{msg.name}::encode(self : \{msg.name}) -> Array[Byte] {\n")
+  sb.write_string(
+    "///|\npub fn \{msg.name}::encode(self : \{msg.name}) -> Array[Byte] {\n",
+  )
   sb.write_string("  let encoder = @wire.Encoder::new()\n")
   for field in msg.fields {
     let num = field.number
     match field.label {
-      Repeated => {
+      Repeated =>
         match field.field_type {
           Scalar(scalar_type) =>
             if is_packable(scalar_type) {
               let write_method = packed_write_method(scalar_type)
               sb.write_string("  if self.\{field.name}.length() > 0 {\n")
-              sb.write_string("    encoder.\{write_method}(\{num}, self.\{field.name})\n")
+              sb.write_string(
+                "    encoder.\{write_method}(\{num}, self.\{field.name})\n",
+              )
               sb.write_string("  }\n")
             } else {
               let write_method = scalar_write_method(scalar_type)
@@ -117,19 +123,22 @@ fn generate_encode(msg : @proto_parser.MessageDef) -> String {
             sb.write_string("  }\n")
           }
         }
-      }
-      _ => {
+      _ =>
         match field.field_type {
           Scalar(scalar_type) => {
             let write_method = scalar_write_method(scalar_type)
             let default_val = scalar_default_value(scalar_type)
             sb.write_string("  if self.\{field.name} != \{default_val} {\n")
-            sb.write_string("    encoder.\{write_method}(\{num}, self.\{field.name})\n")
+            sb.write_string(
+              "    encoder.\{write_method}(\{num}, self.\{field.name})\n",
+            )
             sb.write_string("  }\n")
           }
           Message(type_name) => {
             sb.write_string("  match self.\{field.name} {\n")
-            sb.write_string("    Some(msg) => encoder.write_message(\{num}, (_enc) => {\n")
+            sb.write_string(
+              "    Some(msg) => encoder.write_message(\{num}, (_enc) => {\n",
+            )
             sb.write_string("      let bytes = msg.encode()\n")
             sb.write_string("      for b in bytes { _enc.buf.push(b) }\n")
             sb.write_string("    })\n")
@@ -139,11 +148,12 @@ fn generate_encode(msg : @proto_parser.MessageDef) -> String {
           }
           Enum(_) => {
             sb.write_string("  if self.\{field.name}.to_int() != 0 {\n")
-            sb.write_string("    encoder.write_int32(\{num}, self.\{field.name}.to_int())\n")
+            sb.write_string(
+              "    encoder.write_int32(\{num}, self.\{field.name}.to_int())\n",
+            )
             sb.write_string("  }\n")
           }
         }
-      }
     }
   }
   sb.write_string("  encoder.finish()\n}\n")
@@ -153,7 +163,9 @@ fn generate_encode(msg : @proto_parser.MessageDef) -> String {
 ///|
 fn generate_decode(msg : @proto_parser.MessageDef) -> String {
   let sb = StringBuilder::new()
-  sb.write_string("///|\npub fn \{msg.name}::decode(data : Array[Byte]) -> \{msg.name} raise @wire.WireError {\n")
+  sb.write_string(
+    "///|\npub fn \{msg.name}::decode(data : Array[Byte]) -> \{msg.name} raise @wire.WireError {\n",
+  )
   sb.write_string("  let decoder = @wire.Decoder::new(data)\n")
   for field in msg.fields {
     let default_val = field_default_value(field)
@@ -165,44 +177,52 @@ fn generate_decode(msg : @proto_parser.MessageDef) -> String {
   for field in msg.fields {
     let num = field.number
     match field.label {
-      Repeated => {
+      Repeated =>
         match field.field_type {
           Scalar(scalar_type) =>
             if is_packable(scalar_type) {
               let read_method = packed_read_method(scalar_type)
-              sb.write_string("      \{num} => _f\{num} = decoder.\{read_method}()\n")
+              sb.write_string(
+                "      \{num} => _f\{num} = decoder.\{read_method}()\n",
+              )
             } else {
               let read_method = scalar_read_method(scalar_type)
-              sb.write_string("      \{num} => _f\{num}.push(decoder.\{read_method}())\n")
+              sb.write_string(
+                "      \{num} => _f\{num}.push(decoder.\{read_method}())\n",
+              )
             }
           Message(type_name) => {
             sb.write_string("      \{num} => {\n")
             sb.write_string("        let msg_bytes = decoder.read_bytes()\n")
-            sb.write_string("        _f\{num}.push(\{type_name}::decode(msg_bytes))\n")
+            sb.write_string(
+              "        _f\{num}.push(\{type_name}::decode(msg_bytes))\n",
+            )
             sb.write_string("      }\n")
           }
-          Enum(_) => {
-            sb.write_string("      \{num} => _f\{num}.push(decoder.read_int32())\n")
-          }
+          Enum(_) =>
+            sb.write_string(
+              "      \{num} => _f\{num}.push(decoder.read_int32())\n",
+            )
         }
-      }
-      _ => {
+      _ =>
         match field.field_type {
           Scalar(scalar_type) => {
             let read_method = scalar_read_method(scalar_type)
-            sb.write_string("      \{num} => _f\{num} = decoder.\{read_method}()\n")
+            sb.write_string(
+              "      \{num} => _f\{num} = decoder.\{read_method}()\n",
+            )
           }
           Message(type_name) => {
             sb.write_string("      \{num} => {\n")
             sb.write_string("        let msg_bytes = decoder.read_bytes()\n")
-            sb.write_string("        _f\{num} = Some(\{type_name}::decode(msg_bytes))\n")
+            sb.write_string(
+              "        _f\{num} = Some(\{type_name}::decode(msg_bytes))\n",
+            )
             sb.write_string("      }\n")
           }
-          Enum(_) => {
+          Enum(_) =>
             sb.write_string("      \{num} => _f\{num} = decoder.read_int32()\n")
-          }
         }
-      }
     }
   }
   sb.write_string("      _ => decoder.skip_field(tag.wire_type)\n")

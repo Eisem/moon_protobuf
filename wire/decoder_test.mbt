@@ -124,7 +124,7 @@ test "roundtrip nested message" {
   let dec = @wire.Decoder::new(enc.finish())
   let _ = dec.read_tag()
   let mut inner_value = 0
-  dec.read_message((sub_dec) => {
+  dec.read_message(sub_dec => {
     let _ = sub_dec.read_tag()
     inner_value = sub_dec.read_int32()
   })

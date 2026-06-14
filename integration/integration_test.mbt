@@ -100,7 +100,7 @@ test "wire format: multiple field roundtrip" {
   let mut f4 = 0.0
   let mut f5 = 0
   let mut f6 : UInt64 = 0UL
-  while !(dec.is_at_end()) {
+  while !dec.is_at_end() {
     let tag = dec.read_tag()
     match tag.field_number {
       1 => f1 = dec.read_string()
@@ -123,7 +123,7 @@ test "wire format: multiple field roundtrip" {
 ///|
 test "wire format: nested message binary structure" {
   let enc = @wire.Encoder::new()
-  enc.write_message(1, (sub) => {
+  enc.write_message(1, sub => {
     sub.write_int32(1, 100)
     sub.write_string(2, "nested")
   })
@@ -137,8 +137,8 @@ test "wire format: nested message binary structure" {
   let _ = dec.read_tag()
   let mut inner_id = 0
   let mut inner_name = ""
-  dec.read_message((sub_dec) => {
-    while !(sub_dec.is_at_end()) {
+  dec.read_message(sub_dec => {
+    while !sub_dec.is_at_end() {
       let tag = sub_dec.read_tag()
       match tag.field_number {
         1 => inner_id = sub_dec.read_int32()
@@ -157,15 +157,15 @@ test "wire format: forward compatibility (skip unknown fields)" {
   // Simulate receiving data with extra fields the decoder doesn't know about
   let enc = @wire.Encoder::new()
   enc.write_string(1, "known")
-  enc.write_int64(100, 9999L)       // unknown varint field
-  enc.write_fixed32(101, 0xFFU)     // unknown fixed32
-  enc.write_string(102, "unknown")  // unknown length-delimited
-  enc.write_fixed64(103, 0xAAUL)    // unknown fixed64
+  enc.write_int64(100, 9999L) // unknown varint field
+  enc.write_fixed32(101, 0xFFU) // unknown fixed32
+  enc.write_string(102, "unknown") // unknown length-delimited
+  enc.write_fixed64(103, 0xAAUL) // unknown fixed64
   enc.write_int32(2, 42)
   let dec = @wire.Decoder::new(enc.finish())
   let mut f1 = ""
   let mut f2 = 0
-  while !(dec.is_at_end()) {
+  while !dec.is_at_end() {
     let tag = dec.read_tag()
     match tag.field_number {
       1 => f1 = dec.read_string()

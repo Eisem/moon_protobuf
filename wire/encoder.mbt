@@ -9,8 +9,13 @@ pub fn Encoder::new() -> Encoder {
 }
 
 ///|
-fn Encoder::write_tag(self : Encoder, field_number : Int, wire_type : WireType) -> Unit {
-  let tag_value = (field_number.reinterpret_as_uint() << 3) | wire_type.to_int().reinterpret_as_uint()
+fn Encoder::write_tag(
+  self : Encoder,
+  field_number : Int,
+  wire_type : WireType,
+) -> Unit {
+  let tag_value = (field_number.reinterpret_as_uint() << 3) |
+    wire_type.to_int().reinterpret_as_uint()
   encode_varint(self.buf, tag_value.to_uint64())
 }
 
@@ -52,85 +57,141 @@ fn Encoder::write_raw_bytes(self : Encoder, data : Bytes) -> Unit {
 }
 
 ///|
-pub fn Encoder::write_int32(self : Encoder, field_number : Int, value : Int) -> Unit {
+pub fn Encoder::write_int32(
+  self : Encoder,
+  field_number : Int,
+  value : Int,
+) -> Unit {
   self.write_tag(field_number, Varint)
   self.write_raw_varint32(value)
 }
 
 ///|
-pub fn Encoder::write_int64(self : Encoder, field_number : Int, value : Int64) -> Unit {
+pub fn Encoder::write_int64(
+  self : Encoder,
+  field_number : Int,
+  value : Int64,
+) -> Unit {
   self.write_tag(field_number, Varint)
   self.write_raw_varint64(value)
 }
 
 ///|
-pub fn Encoder::write_uint32(self : Encoder, field_number : Int, value : UInt) -> Unit {
+pub fn Encoder::write_uint32(
+  self : Encoder,
+  field_number : Int,
+  value : UInt,
+) -> Unit {
   self.write_tag(field_number, Varint)
   encode_varint(self.buf, value.to_uint64())
 }
 
 ///|
-pub fn Encoder::write_uint64(self : Encoder, field_number : Int, value : UInt64) -> Unit {
+pub fn Encoder::write_uint64(
+  self : Encoder,
+  field_number : Int,
+  value : UInt64,
+) -> Unit {
   self.write_tag(field_number, Varint)
   encode_varint(self.buf, value)
 }
 
 ///|
-pub fn Encoder::write_sint32(self : Encoder, field_number : Int, value : Int) -> Unit {
+pub fn Encoder::write_sint32(
+  self : Encoder,
+  field_number : Int,
+  value : Int,
+) -> Unit {
   self.write_tag(field_number, Varint)
   encode_varint(self.buf, encode_zigzag32(value).to_uint64())
 }
 
 ///|
-pub fn Encoder::write_sint64(self : Encoder, field_number : Int, value : Int64) -> Unit {
+pub fn Encoder::write_sint64(
+  self : Encoder,
+  field_number : Int,
+  value : Int64,
+) -> Unit {
   self.write_tag(field_number, Varint)
   encode_varint(self.buf, encode_zigzag64(value))
 }
 
 ///|
-pub fn Encoder::write_bool(self : Encoder, field_number : Int, value : Bool) -> Unit {
+pub fn Encoder::write_bool(
+  self : Encoder,
+  field_number : Int,
+  value : Bool,
+) -> Unit {
   self.write_tag(field_number, Varint)
   self.buf.push(if value { b'\x01' } else { b'\x00' })
 }
 
 ///|
-pub fn Encoder::write_fixed32(self : Encoder, field_number : Int, value : UInt) -> Unit {
+pub fn Encoder::write_fixed32(
+  self : Encoder,
+  field_number : Int,
+  value : UInt,
+) -> Unit {
   self.write_tag(field_number, Fixed32)
   self.write_raw_little_endian32(value)
 }
 
 ///|
-pub fn Encoder::write_fixed64(self : Encoder, field_number : Int, value : UInt64) -> Unit {
+pub fn Encoder::write_fixed64(
+  self : Encoder,
+  field_number : Int,
+  value : UInt64,
+) -> Unit {
   self.write_tag(field_number, Fixed64)
   self.write_raw_little_endian64(value)
 }
 
 ///|
-pub fn Encoder::write_sfixed32(self : Encoder, field_number : Int, value : Int) -> Unit {
+pub fn Encoder::write_sfixed32(
+  self : Encoder,
+  field_number : Int,
+  value : Int,
+) -> Unit {
   self.write_tag(field_number, Fixed32)
   self.write_raw_little_endian32(value.reinterpret_as_uint())
 }
 
 ///|
-pub fn Encoder::write_sfixed64(self : Encoder, field_number : Int, value : Int64) -> Unit {
+pub fn Encoder::write_sfixed64(
+  self : Encoder,
+  field_number : Int,
+  value : Int64,
+) -> Unit {
   self.write_tag(field_number, Fixed64)
   self.write_raw_little_endian64(value.reinterpret_as_uint64())
 }
 
 ///|
-pub fn Encoder::write_float(self : Encoder, field_number : Int, value : Float) -> Unit {
+pub fn Encoder::write_float(
+  self : Encoder,
+  field_number : Int,
+  value : Float,
+) -> Unit {
   self.write_tag(field_number, Fixed32)
   self.write_raw_little_endian32(value.reinterpret_as_uint())
 }
 
 ///|
-pub fn Encoder::write_double(self : Encoder, field_number : Int, value : Double) -> Unit {
+pub fn Encoder::write_double(
+  self : Encoder,
+  field_number : Int,
+  value : Double,
+) -> Unit {
   self.write_tag(field_number, Fixed64)
   self.write_raw_little_endian64(value.reinterpret_as_uint64())
 }
 
 ///|
-pub fn Encoder::write_string(self : Encoder, field_number : Int, value : String) -> Unit {
+pub fn Encoder::write_string(
+  self : Encoder,
+  field_number : Int,
+  value : String,
+) -> Unit {
   let utf8_bytes = @utf8.encode(value)
   self.write_tag(field_number, LengthDelimited)
   encode_varint(self.buf, utf8_bytes.length().reinterpret_as_uint().to_uint64())
@@ -138,7 +199,11 @@ pub fn Encoder::write_string(self : Encoder, field_number : Int, value : String)
 }
 
 ///|
-pub fn Encoder::write_bytes(self : Encoder, field_number : Int, value : Array[Byte]) -> Unit {
+pub fn Encoder::write_bytes(
+  self : Encoder,
+  field_number : Int,
+  value : Array[Byte],
+) -> Unit {
   self.write_tag(field_number, LengthDelimited)
   encode_varint(self.buf, value.length().reinterpret_as_uint().to_uint64())
   for b in value {
@@ -147,7 +212,11 @@ pub fn Encoder::write_bytes(self : Encoder, field_number : Int, value : Array[By
 }
 
 ///|
-pub fn Encoder::write_message(self : Encoder, field_number : Int, encode_fn : (Encoder) -> Unit) -> Unit {
+pub fn Encoder::write_message(
+  self : Encoder,
+  field_number : Int,
+  encode_fn : (Encoder) -> Unit,
+) -> Unit {
   let sub = Encoder::new()
   encode_fn(sub)
   let sub_bytes = sub.buf
@@ -159,7 +228,11 @@ pub fn Encoder::write_message(self : Encoder, field_number : Int, encode_fn : (E
 }
 
 ///|
-pub fn Encoder::write_packed_int32(self : Encoder, field_number : Int, values : Array[Int]) -> Unit {
+pub fn Encoder::write_packed_int32(
+  self : Encoder,
+  field_number : Int,
+  values : Array[Int],
+) -> Unit {
   let sub : Array[Byte] = []
   for v in values {
     encode_varint(sub, v.reinterpret_as_uint().to_uint64())
@@ -172,7 +245,11 @@ pub fn Encoder::write_packed_int32(self : Encoder, field_number : Int, values : 
 }
 
 ///|
-pub fn Encoder::write_packed_uint64(self : Encoder, field_number : Int, values : Array[UInt64]) -> Unit {
+pub fn Encoder::write_packed_uint64(
+  self : Encoder,
+  field_number : Int,
+  values : Array[UInt64],
+) -> Unit {
   let sub : Array[Byte] = []
   for v in values {
     encode_varint(sub, v)
@@ -185,18 +262,32 @@ pub fn Encoder::write_packed_uint64(self : Encoder, field_number : Int, values :
 }
 
 ///|
-pub fn Encoder::write_packed_float(self : Encoder, field_number : Int, values : Array[Float]) -> Unit {
+pub fn Encoder::write_packed_float(
+  self : Encoder,
+  field_number : Int,
+  values : Array[Float],
+) -> Unit {
   self.write_tag(field_number, LengthDelimited)
-  encode_varint(self.buf, (values.length() * 4).reinterpret_as_uint().to_uint64())
+  encode_varint(
+    self.buf,
+    (values.length() * 4).reinterpret_as_uint().to_uint64(),
+  )
   for v in values {
     self.write_raw_little_endian32(v.reinterpret_as_uint())
   }
 }
 
 ///|
-pub fn Encoder::write_packed_double(self : Encoder, field_number : Int, values : Array[Double]) -> Unit {
+pub fn Encoder::write_packed_double(
+  self : Encoder,
+  field_number : Int,
+  values : Array[Double],
+) -> Unit {
   self.write_tag(field_number, LengthDelimited)
-  encode_varint(self.buf, (values.length() * 8).reinterpret_as_uint().to_uint64())
+  encode_varint(
+    self.buf,
+    (values.length() * 8).reinterpret_as_uint().to_uint64(),
+  )
   for v in values {
     self.write_raw_little_endian64(v.reinterpret_as_uint64())
   }

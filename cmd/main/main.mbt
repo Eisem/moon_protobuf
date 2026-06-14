@@ -12,9 +12,7 @@ fn main {
   println("=== Proto Input ===")
   println(proto_input)
   println("\n=== Generated MoonBit Code ===")
-  let file = try {
-    @proto_parser.parse(proto_input)
-  } catch {
+  let file = @proto_parser.parse(proto_input) catch {
     err => {
       println("Parse error: \{err}")
       return
@@ -34,16 +32,16 @@ fn main {
   let mut name = ""
   let mut age = 0
   let tags : Array[String] = []
-  while !(dec.is_at_end()) {
-    let tag = try { dec.read_tag() } catch { _ => break }
+  while !dec.is_at_end() {
+    let tag = dec.read_tag() catch { _ => break }
     match tag.field_number {
-      1 => name = try { dec.read_string() } catch { _ => break }
-      2 => age = try { dec.read_int32() } catch { _ => break }
+      1 => name = dec.read_string() catch { _ => break }
+      2 => age = dec.read_int32() catch { _ => break }
       3 => {
-        let s = try { dec.read_string() } catch { _ => break }
+        let s = dec.read_string() catch { _ => break }
         tags.push(s)
       }
-      _ => try { dec.skip_field(tag.wire_type) } catch { _ => break }
+      _ => dec.skip_field(tag.wire_type) catch { _ => break }
     }
   }
   println("Decoded: name=\{name}, age=\{age}, tags=\{to_repr(tags)}")
