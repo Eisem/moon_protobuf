@@ -99,6 +99,22 @@ pub impl Show for TokenKind with output(self, logger) {
 }
 
 ///|
+pub impl Show for ParseError with output(self, logger) {
+  match self {
+    UnexpectedChar(char~, line~, col~) =>
+      logger.write_string("unexpected char '\{char}' at \{line}:\{col}")
+    UnterminatedString(line~, col~) =>
+      logger.write_string("unterminated string at \{line}:\{col}")
+    UnexpectedToken(expected~, got~, line~, col~) =>
+      logger.write_string("expected \{expected}, got \{got} at \{line}:\{col}")
+    UnexpectedEof(expected~) =>
+      logger.write_string("unexpected EOF, expected \{expected}")
+    InvalidSyntax(message~, line~, col~) =>
+      logger.write_string("\{message} at \{line}:\{col}")
+  }
+}
+
+///|
 struct Lexer {
   input : String
   mut pos : Int
