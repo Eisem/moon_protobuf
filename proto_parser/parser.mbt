@@ -213,7 +213,12 @@ fn Parser::parse_field(self : Parser) -> FieldDef raise ParseError {
       let _ = self.expect(Equals)
       let number = self.expect_int()
       self.expect_semicolon()
-      return { name, field_type: MapType(key_type~, value_type~), label: Optional, number }
+      return {
+        name,
+        field_type: MapType(key_type~, value_type~),
+        label: Optional,
+        number,
+      }
     }
     Repeated => {
       label = Repeated
@@ -237,21 +242,66 @@ fn Parser::parse_field(self : Parser) -> FieldDef raise ParseError {
 fn Parser::parse_scalar_type(self : Parser) -> ScalarType raise ParseError {
   let tok = self.current()
   match tok.kind {
-    TDouble => { self.pos = self.pos + 1; Double }
-    TFloat => { self.pos = self.pos + 1; Float }
-    TInt32 => { self.pos = self.pos + 1; Int32 }
-    TInt64 => { self.pos = self.pos + 1; Int64 }
-    TUint32 => { self.pos = self.pos + 1; UInt32 }
-    TUint64 => { self.pos = self.pos + 1; UInt64 }
-    TSint32 => { self.pos = self.pos + 1; SInt32 }
-    TSint64 => { self.pos = self.pos + 1; SInt64 }
-    TFixed32 => { self.pos = self.pos + 1; Fixed32 }
-    TFixed64 => { self.pos = self.pos + 1; Fixed64 }
-    TSfixed32 => { self.pos = self.pos + 1; SFixed32 }
-    TSfixed64 => { self.pos = self.pos + 1; SFixed64 }
-    TBool => { self.pos = self.pos + 1; Bool }
-    TString => { self.pos = self.pos + 1; String_ }
-    TBytes => { self.pos = self.pos + 1; Bytes }
+    TDouble => {
+      self.pos = self.pos + 1
+      Double
+    }
+    TFloat => {
+      self.pos = self.pos + 1
+      Float
+    }
+    TInt32 => {
+      self.pos = self.pos + 1
+      Int32
+    }
+    TInt64 => {
+      self.pos = self.pos + 1
+      Int64
+    }
+    TUint32 => {
+      self.pos = self.pos + 1
+      UInt32
+    }
+    TUint64 => {
+      self.pos = self.pos + 1
+      UInt64
+    }
+    TSint32 => {
+      self.pos = self.pos + 1
+      SInt32
+    }
+    TSint64 => {
+      self.pos = self.pos + 1
+      SInt64
+    }
+    TFixed32 => {
+      self.pos = self.pos + 1
+      Fixed32
+    }
+    TFixed64 => {
+      self.pos = self.pos + 1
+      Fixed64
+    }
+    TSfixed32 => {
+      self.pos = self.pos + 1
+      SFixed32
+    }
+    TSfixed64 => {
+      self.pos = self.pos + 1
+      SFixed64
+    }
+    TBool => {
+      self.pos = self.pos + 1
+      Bool
+    }
+    TString => {
+      self.pos = self.pos + 1
+      String_
+    }
+    TBytes => {
+      self.pos = self.pos + 1
+      Bytes
+    }
     _ =>
       raise ParseError::UnexpectedToken(
         expected="scalar type",

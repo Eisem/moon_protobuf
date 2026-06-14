@@ -123,10 +123,12 @@ test "parse map field" {
   assert_eq(file.messages[0].fields.length(), 2)
   assert_eq(file.messages[0].fields[0].name, "metadata")
   assert_true(
-    file.messages[0].fields[0].field_type == MapType(key_type=String_, value_type=Scalar(String_)),
+    file.messages[0].fields[0].field_type ==
+    MapType(key_type=String_, value_type=Scalar(String_)),
   )
   assert_true(
-    file.messages[0].fields[1].field_type == MapType(key_type=Int32, value_type=Scalar(String_)),
+    file.messages[0].fields[1].field_type ==
+    MapType(key_type=Int32, value_type=Scalar(String_)),
   )
 }
 

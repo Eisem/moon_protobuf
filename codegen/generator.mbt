@@ -37,7 +37,10 @@ pub fn generate_message(msg : @proto_parser.MessageDef) -> String {
 }
 
 ///|
-fn generate_oneof_enum(msg_name : String, oneof : @proto_parser.OneofDef) -> String {
+fn generate_oneof_enum(
+  msg_name : String,
+  oneof : @proto_parser.OneofDef,
+) -> String {
   let sb = StringBuilder::new()
   let enum_name = "\{msg_name}_\{capitalize(oneof.name)}"
   sb.write_string("///|\npub(all) enum \{enum_name} {\n")
@@ -230,7 +233,9 @@ fn generate_encode(msg : @proto_parser.MessageDef) -> String {
         Message(_) => "write_bytes"
         _ => "write_string"
       }
-      sb.write_string("    \{enum_name}::\{variant}(v) => encoder.\{write_method}(\{ofield.number}, v)\n")
+      sb.write_string(
+        "    \{enum_name}::\{variant}(v) => encoder.\{write_method}(\{ofield.number}, v)\n",
+      )
     }
     sb.write_string("  }\n")
   }
@@ -314,15 +319,26 @@ fn generate_decode(msg : @proto_parser.MessageDef) -> String {
             }
             sb.write_string("      \{num} => {\n")
             sb.write_string("        decoder.read_message((_entry_dec) => {\n")
-            sb.write_string("          let mut _k = \{scalar_default_value(key_type)}\n")
-            let val_default = match value_type { Scalar(t) => scalar_default_value(t); _ => "\"\"" }
+            sb.write_string(
+              "          let mut _k = \{scalar_default_value(key_type)}\n",
+            )
+            let val_default = match value_type {
+              Scalar(t) => scalar_default_value(t)
+              _ => "\"\""
+            }
             sb.write_string("          let mut _v = \{val_default}\n")
             sb.write_string("          while !(_entry_dec.is_at_end()) {\n")
             sb.write_string("            let etag = _entry_dec.read_tag()\n")
             sb.write_string("            match etag.field_number {\n")
-            sb.write_string("              1 => _k = _entry_dec.\{key_read}()\n")
-            sb.write_string("              2 => _v = _entry_dec.\{val_read}()\n")
-            sb.write_string("              _ => _entry_dec.skip_field(etag.wire_type)\n")
+            sb.write_string(
+              "              1 => _k = _entry_dec.\{key_read}()\n",
+            )
+            sb.write_string(
+              "              2 => _v = _entry_dec.\{val_read}()\n",
+            )
+            sb.write_string(
+              "              _ => _entry_dec.skip_field(etag.wire_type)\n",
+            )
             sb.write_string("            }\n")
             sb.write_string("          }\n")
             sb.write_string("          _f\{num}[_k] = _v\n")
@@ -341,7 +357,9 @@ fn generate_decode(msg : @proto_parser.MessageDef) -> String {
         Message(_) => "read_bytes"
         _ => "read_string"
       }
-      sb.write_string("      \{ofield.number} => _oneof_\{oneof.name} = \{enum_name}::\{variant}(decoder.\{read_method}())\n")
+      sb.write_string(
+        "      \{ofield.number} => _oneof_\{oneof.name} = \{enum_name}::\{variant}(decoder.\{read_method}())\n",
+      )
     }
   }
   sb.write_string("      _ => decoder.skip_field(tag.wire_type)\n")

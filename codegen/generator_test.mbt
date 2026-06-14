@@ -126,7 +126,12 @@ test "generate oneof" {
       {
         name: "Shape",
         fields: [
-          { name: "name", field_type: Scalar(String_), label: Optional, number: 1 },
+          {
+            name: "name",
+            field_type: Scalar(String_),
+            label: Optional,
+            number: 1,
+          },
         ],
         oneofs: [
           {
