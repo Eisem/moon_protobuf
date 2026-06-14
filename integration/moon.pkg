@@ -1,0 +1,5 @@
+import {
+  "Eisem/moon_protobuf/wire",
+  "Eisem/moon_protobuf/proto_parser",
+  "Eisem/moon_protobuf/codegen",
+} for "test"
